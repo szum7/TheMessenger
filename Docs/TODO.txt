@@ -1,0 +1,5 @@
+Minor:
+- RunUp-nál hosszabb a messenger köpenye mint máshol
+- standSide->runSide váltásnál túl nagyot ugrik a feje (runSidenál nagyobb lesz)
+- runUp-nál a csizma (láb) vastagabb legyen. (half tones használata, ha más nem
+- standUp-nál idegesítően nem szimmetrikus
