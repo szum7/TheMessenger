@@ -5,18 +5,86 @@ using UnityEngine;
 public class BasicMovement_v2 : MonoBehaviour
 {
     public Animator animator;
-    public float speed;
-    public KeyCode previousArrowKey;
-    bool isEasyMode;
+    public float speedOffset;
+    public bool isEasyMode;
+
+    KeyCode previousArrowKey;
+    float speed;
 
     public BasicMovement_v2()
     {
-        this.speed = 1;
+        this.SetPublicPropertiesToDefaultValues();
+        this.SetPrivateProperties();
+    }
+
+    void SetPublicPropertiesToDefaultValues()
+    {
         this.isEasyMode = true;
+        this.speedOffset = 2;
+    }
+
+    void SetPrivateProperties()
+    {
+        this.speed = 1;
+        this.previousArrowKey = default(KeyCode);
     }
 
     void Start()
     {
+    }
+
+    void Update()
+    {
+        if (Input.GetKey(KeyCode.W) || 
+            Input.GetKey(KeyCode.A) || 
+            Input.GetKey(KeyCode.S) || 
+            Input.GetKey(KeyCode.D))
+        {
+            // TODO add slight acceleration when standing->running
+            // TODO add slight deceleration when running->stopping/standing
+
+            // Calculate facing
+            float horizontal = 0;
+            float vertical = 0;
+            if (Input.GetKey(KeyCode.A)) horizontal = -1;
+            if (Input.GetKey(KeyCode.D)) horizontal = 1;
+            if (Input.GetKey(KeyCode.W)) vertical = 1;
+            if (Input.GetKey(KeyCode.S)) vertical = -1;
+
+            var movement = new Vector3(horizontal, vertical, 0.0f);
+
+            // Set speed
+            if (IsValidSprintSequenceKeyPressed())
+            {
+                speed += 0.015f;
+
+                if (!isEasyMode)
+                {
+                    previousArrowKey = GetPressedArrowKey();
+                }
+            }
+
+            // Set animation state
+            animator.SetFloat("Horizontal", movement.x);
+            animator.SetFloat("Vertical", movement.y);
+            animator.SetFloat("Magnitude", movement.magnitude);
+
+            // Set position
+            transform.position = transform.position + ((movement * speed) * Time.deltaTime * speedOffset);
+
+            // Set animation speed
+            animator.speed = speed;
+        }
+        else
+        {
+            animator.SetFloat("Horizontal", 0);
+            animator.SetFloat("Vertical", 0);
+            animator.SetFloat("Magnitude", 0);
+
+            ResetSprint();
+        }
+
+        //Debug.Log("here");
     }
 
     bool IsValidSprintSequenceKeyPressed()
@@ -45,52 +113,6 @@ public class BasicMovement_v2 : MonoBehaviour
         return KeyCode.LeftArrow;
     }
 
-    void Update()
-    {
-        if (Input.GetKey(KeyCode.W) || 
-            Input.GetKey(KeyCode.A) || 
-            Input.GetKey(KeyCode.S) || 
-            Input.GetKey(KeyCode.D))
-        {
-            float horizontal = 0;
-            float vertical = 0;
-            if (Input.GetKey(KeyCode.A)) horizontal = -1;
-            if (Input.GetKey(KeyCode.D)) horizontal = 1;
-            if (Input.GetKey(KeyCode.W)) vertical = 1;
-            if (Input.GetKey(KeyCode.S)) vertical = -1;
-
-            var movement = new Vector3(horizontal, vertical, 0.0f);
-
-            if (IsValidSprintSequenceKeyPressed())
-            {
-                this.speed += 0.015f;
-
-                if (!isEasyMode)
-                {
-                    this.previousArrowKey = GetPressedArrowKey();
-                }
-            }
-
-            animator.SetFloat("Horizontal", movement.x);
-            animator.SetFloat("Vertical", movement.y);
-            animator.SetFloat("Magnitude", movement.magnitude);
-
-            transform.position = transform.position + (movement * this.speed) * Time.deltaTime;
-
-            animator.speed = this.speed;
-        }
-        else
-        {
-            animator.SetFloat("Horizontal", 0);
-            animator.SetFloat("Vertical", 0);
-            animator.SetFloat("Magnitude", 0);
-
-            this.ResetSprint();
-        }
-        
-        //Debug.Log("here");
-    }
-
     void Update_old()
     {
         var movement = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0.0f);
@@ -101,13 +123,4 @@ public class BasicMovement_v2 : MonoBehaviour
 
         transform.position = transform.position + movement * Time.deltaTime;
     }
-
-    //void Movement_v1()
-    //{
-    //    animator.SetFloat("Horizontal", Input.GetAxis("Horizontal"));
-    //    animator.SetFloat("Vertical", Input.GetAxis("Vertical"));
-
-    //    Vector3 horizontal = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0.0f);
-    //    transform.position += horizontal * speed;
-    //}
 }
